@@ -44,9 +44,10 @@ struct CompassRing: View {
                 Text("\(degree)")
                     .font(.system(size: 14))
                     .foregroundColor(.white)
-                    .offset(y: -120)
-                    .rotationEffect(.degrees(Double(degree)))
-                    .rotationEffect(.degrees(Double(-degree))) // Counter-rotate text
+                    .position(
+                        x: 150 + 120 * cos(Double(degree - 90) * .pi / 180),
+                        y: 150 + 120 * sin(Double(degree - 90) * .pi / 180)
+                    )
             }
             
             // Center crosshairs
