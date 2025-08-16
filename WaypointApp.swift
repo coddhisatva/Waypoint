@@ -7,6 +7,7 @@
 
 import SwiftUI
 import GoogleMaps
+import GooglePlaces
 
 @main
 struct WaypointApp: App {
@@ -17,6 +18,7 @@ struct WaypointApp: App {
            let plist = NSDictionary(contentsOfFile: path),
            let apiKey = plist["GMSApiKey"] as? String {
             GMSServices.provideAPIKey(apiKey)
+            GMSPlacesClient.provideAPIKey(apiKey)
         } else {
             print("Error: Could not load Google Maps API key from Config.plist")
         }
