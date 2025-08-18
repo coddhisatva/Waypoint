@@ -47,6 +47,7 @@ class HapticService: ObservableObject {
         setupHapticEngine()
     }
     
+    /// Initializes the Core Haptics engine
     private func setupHapticEngine() {
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
             print("Haptic engine not supported on this device")
@@ -63,6 +64,7 @@ class HapticService: ObservableObject {
     
     // MARK: - Main Feedback Method
     
+    /// Main haptic feedback method based on compass alignment
     func updateAlignmentFeedback(degreesOffTarget: Double) {
         let absAlignment = abs(degreesOffTarget)
         
@@ -88,6 +90,7 @@ class HapticService: ObservableObject {
     
     // MARK: - Zone Handling
     
+    /// Handles haptic feedback in the precise alignment zone (0°-5°)
     private func handleAlignmentZone(degreesOffTarget: Double) {
         // Start timing if we just entered alignment zone
         if alignmentStartTime == nil {
@@ -110,6 +113,7 @@ class HapticService: ObservableObject {
         }
     }
     
+    /// Handles haptic feedback in the approach zone (6°-15°)
     private func handleApproachZone(degreesOffTarget: Double) {
         // Reset alignment timing since we're not precisely aligned
         resetAlignmentState()
@@ -119,6 +123,7 @@ class HapticService: ObservableObject {
         provideApproachFeedback(intensity: approachIntensity)
     }
     
+    /// Handles when user is out of feedback range (>15°)
     private func handleOutOfRange() {
         resetAlignmentState()
         stopAllFeedback()
@@ -126,6 +131,7 @@ class HapticService: ObservableObject {
     
     // MARK: - Feedback Calculations
     
+    /// Calculates haptic intensity for approach zone
     private func calculateApproachIntensity(degreesOffTarget: Double) -> Float {
         // Linear interpolation: 15° = min intensity, 5° = max intensity
         let normalizedDistance = (degreesOffTarget - alignmentZoneRange) / (approachZoneRange - alignmentZoneRange)
@@ -134,6 +140,7 @@ class HapticService: ObservableObject {
         return minApproachIntensity + Float(1.0 - clampedDistance) * (maxApproachIntensity - minApproachIntensity)
     }
     
+    /// Calculates building haptic intensity during alignment hold
     private func calculateAlignmentBuildup(degreesOffTarget: Double, holdDuration: TimeInterval) -> Float {
         // Combine accuracy and hold time for buildup intensity
         let accuracyFactor = Float(1.0 - (degreesOffTarget / alignmentZoneRange)) // Better accuracy = higher intensity
@@ -194,6 +201,7 @@ class HapticService: ObservableObject {
         playHapticEvent(event)
     }
     
+    /// Triggers the satisfying culmination click
     private func triggerCulminationClick() {
         guard let engine = hapticEngine else { return }
         
@@ -248,6 +256,7 @@ class HapticService: ObservableObject {
     
     // MARK: - Public Methods
     
+    /// Resets all haptic state for new destination
     func resetAllState() {
         exitDeadZone()
         resetAlignmentState()

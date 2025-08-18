@@ -27,11 +27,13 @@ class LocationManager: NSObject, ObservableObject {
         locationManager.requestWhenInUseAuthorization()
     }
     
+    /// Starts GPS and compass updates
     private func startLocationUpdates() {
         locationManager.startUpdatingLocation()
         locationManager.startUpdatingHeading()
     }
     
+    /// Sets navigation destination and resets haptic state
     func setDestination(_ destination: Destination) {
         self.destination = destination
         calculateBearingAndDistance()
@@ -39,6 +41,7 @@ class LocationManager: NSObject, ObservableObject {
         hapticService.resetAllState()
     }
     
+    /// Calculates bearing and distance to destination
     private func calculateBearingAndDistance() {
         guard let current = currentLocation, let dest = destination else { return }
         
@@ -55,6 +58,7 @@ class LocationManager: NSObject, ObservableObject {
         updateHapticFeedback()
     }
     
+    /// Updates haptic feedback based on compass alignment
     private func updateHapticFeedback() {
         guard let current = currentLocation, destination != nil else { return }
         
@@ -67,6 +71,7 @@ class LocationManager: NSObject, ObservableObject {
         hapticService.updateAlignmentFeedback(degreesOffTarget: degreesOffTarget)
     }
     
+    /// Calculates signed alignment error (+ = right, - = left)
     private func calculateSignedAlignmentError(currentHeading: Double, targetBearing: Double) -> Double {
         // Calculate signed difference: positive = right of target, negative = left of target
         var difference = currentHeading - targetBearing
@@ -82,6 +87,7 @@ class LocationManager: NSObject, ObservableObject {
         return difference  // Return signed value
     }
     
+    /// Calculates bearing from one coordinate to another
     private func calculateBearing(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double {
         let lat1 = from.latitude * .pi / 180
         let lat2 = to.latitude * .pi / 180
@@ -94,6 +100,7 @@ class LocationManager: NSObject, ObservableObject {
         return (bearing + 360).truncatingRemainder(dividingBy: 360)
     }
     
+    /// Converts GPS coordinates to human-readable address
     private func reverseGeocode(location: CLLocation) {
         geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
             guard let placemark = placemarks?.first else { return }
