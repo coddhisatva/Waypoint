@@ -10,6 +10,10 @@ import SwiftUI
 struct CompassRing: View {
     let heading: Double
     
+    // Compass size and positioning constants
+    private let compassSize: CGFloat = 300
+    private let numberRadius: CGFloat = 175
+    
     var body: some View {
         ZStack {
             // Main circle
@@ -41,14 +45,15 @@ struct CompassRing: View {
             }
             .frame(width: 240)
             
-            // Degree numbers - OUTSIDE compass ring and rotated with compass
+            // Degree numbers
             ForEach([30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330], id: \.self) { degree in
                 Text("\(degree)")
                     .font(.system(size: 14))
                     .foregroundColor(.white)
-                    .offset(y: -135) // Moved outside (was using position)
-                    .rotationEffect(.degrees(Double(degree)))
-                    .rotationEffect(.degrees(Double(-degree))) // Counter-rotate text
+                    .position(
+                        x: compassSize/2 + numberRadius * cos(Double(degree - 90) * .pi / 180),
+                        y: compassSize/2 + numberRadius * sin(Double(degree - 90) * .pi / 180)
+                    )
             }
             
             // Center crosshairs
@@ -63,7 +68,7 @@ struct CompassRing: View {
                 .fill(Color.gray)
                 .frame(width: 40, height: 40)
         }
-        .frame(width: 300, height: 300)
+        .frame(width: compassSize, height: compassSize)
         .rotationEffect(.degrees(-heading)) // Rotate entire compass opposite to heading
     }
 }
@@ -71,20 +76,25 @@ struct CompassRing: View {
 struct CompassNeedle: View {
     let heading: Double
     
+    // Needle positioning constants
+    private let redArrowDistance: CGFloat = 166
+    private let whiteLineLength: CGFloat = 68
+    private let whiteLineOffset: CGFloat = -30
+    
     var body: some View {
         ZStack {
-            // Red north indicator triangle (stays fixed pointing to magnetic north)
+            // Red north indicator triangle (points to magnetic north)
             Triangle()
                 .fill(Color.red)
-                .frame(width: 8, height: 15)
-                .offset(y: -142)
-            // No rotation - this stays fixed while compass rotates around it
+                .frame(width: 8, height: 16)
+                .offset(y: -redArrowDistance)
+                .rotationEffect(.degrees(-heading))  // Add back rotation to point north
             
             // White heading indicator line (shows current device direction)
             Rectangle()
                 .fill(Color.white)
-                .frame(width: 3, height: 60)
-                .offset(y: -30)
+                .frame(width: 4, height: whiteLineLength)
+                .offset(y: whiteLineOffset)
             // No rotation - points "up" relative to device
         }
     }
@@ -94,26 +104,29 @@ struct DestinationPin: View {
     let bearing: Double
     let currentHeading: Double
     
+    // Pin positioning constants
+    private let pinDistance: CGFloat = 180
+    
     var body: some View {
         // Google Maps style pin
         ZStack {
             // Pin body (teardrop shape)
             Circle()
                 .fill(Color.red)
-                .frame(width: 20, height: 20)
+                .frame(width: 30, height: 30)
                 .overlay(
                     Circle()
                         .fill(Color.white)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 15, height: 15)
                 )
-            
+            /*
             // Pin point
             Triangle()
                 .fill(Color.red)
                 .frame(width: 8, height: 8)
-                .offset(y: 6)
+                .offset(y: 6)*/
         }
-        .offset(y: -170) // Moved further outside compass (was -155)
+        .offset(y: -pinDistance)
         .rotationEffect(.degrees(bearing - currentHeading)) // Position relative to magnetic north
     }
 }

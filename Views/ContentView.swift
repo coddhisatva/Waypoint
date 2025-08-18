@@ -28,12 +28,12 @@ struct ContentView: View {
                     Button(action: {
                         showingMapView.toggle()
                     }) {
-                        Image(systemName: showingMapView ? "location.north.circle.fill" : "map.circle.fill")
+                        Image(systemName: showingMapView ? "safari.fill" : "map.circle.fill")
                             .font(.system(size: 32)) // Increased from .title
                             .foregroundColor(.white)
                             .background(
                                 Circle()
-                                    .fill(Color.black.opacity(0.6))
+                                    .fill(showingMapView ? Color.black.opacity(0.6) : Color.white.opacity(0.3))
                                     .frame(width: 60, height: 60) // Explicit larger background
                             )
                     }
