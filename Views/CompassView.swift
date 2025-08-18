@@ -140,6 +140,11 @@ struct CompassView: View {
             return "0°"
         }
         
+        // If exactly opposite (180°), no direction needed
+        if absDifference >= 179.5 {
+            return "180°"
+        }
+        
         let direction = alignmentError > 0 ? "R" : "L"
         return "\(Int(absDifference))° \(direction)"
     }
