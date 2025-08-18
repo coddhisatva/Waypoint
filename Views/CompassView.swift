@@ -87,6 +87,13 @@ struct CompassView: View {
                 // Elevation
                 Text("\(Int(current.elevation)) ft Elevation")
                     .font(.system(size: 16, weight: .light))
+                
+                // Waypoint alignment testing (only show if destination exists)
+                if locationManager.destination != nil {
+                    Text(waypointAlignmentText)
+                        .font(.system(size: 16, weight: .light))
+                        .foregroundColor(.yellow) // Different color for testing visibility
+                }
             }
         }
     }
@@ -122,5 +129,18 @@ struct CompassView: View {
         case 292.5..<337.5: return "NW"
         default: return "N"
         }
+    }
+    
+    private var waypointAlignmentText: String {
+        let alignmentError = locationManager.alignmentError
+        let absDifference = abs(alignmentError)
+        
+        // If perfectly aligned, just show 0°
+        if absDifference < 1 {
+            return "0°"
+        }
+        
+        let direction = alignmentError > 0 ? "R" : "L"
+        return "\(Int(absDifference))° \(direction)"
     }
 }

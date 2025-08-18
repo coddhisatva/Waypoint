@@ -18,6 +18,7 @@ class LocationManager: NSObject, ObservableObject {
     @Published var destination: Destination?
     @Published var bearingToDestination: Double = 0
     @Published var distanceToDestination: Double = 0
+    @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
     
     override init() {
         super.init()
@@ -57,17 +58,18 @@ class LocationManager: NSObject, ObservableObject {
     private func updateHapticFeedback() {
         guard let current = currentLocation, destination != nil else { return }
         
-        // Calculate how many degrees off target we are
+        // Calculate alignment error (signed and absolute)
         let currentHeading = current.heading
-        let degreesOffTarget = calculateAlignmentError(currentHeading: currentHeading, targetBearing: bearingToDestination)
+        alignmentError = calculateSignedAlignmentError(currentHeading: currentHeading, targetBearing: bearingToDestination)
+        let degreesOffTarget = abs(alignmentError)
         
         // Update haptic service with alignment info
         hapticService.updateAlignmentFeedback(degreesOffTarget: degreesOffTarget)
     }
     
-    private func calculateAlignmentError(currentHeading: Double, targetBearing: Double) -> Double {
-        // Calculate the shortest angular distance between current heading and target bearing
-        var difference = targetBearing - currentHeading
+    private func calculateSignedAlignmentError(currentHeading: Double, targetBearing: Double) -> Double {
+        // Calculate signed difference: positive = right of target, negative = left of target
+        var difference = currentHeading - targetBearing
         
         // Normalize to -180 to +180 range
         while difference > 180 {
@@ -77,7 +79,7 @@ class LocationManager: NSObject, ObservableObject {
             difference += 360
         }
         
-        return abs(difference)
+        return difference  // Return signed value
     }
     
     private func calculateBearing(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double {
