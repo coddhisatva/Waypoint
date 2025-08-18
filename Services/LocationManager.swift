@@ -12,6 +12,7 @@ import Combine
 class LocationManager: NSObject, ObservableObject {
     private let locationManager = CLLocationManager()
     private let geocoder = CLGeocoder()
+    private let hapticService = HapticService()
     
     @Published var currentLocation: CurrentLocation?
     @Published var destination: Destination?
@@ -33,6 +34,8 @@ class LocationManager: NSObject, ObservableObject {
     func setDestination(_ destination: Destination) {
         self.destination = destination
         calculateBearingAndDistance()
+        // Reset haptic state when setting new destination
+        hapticService.resetAllState()
     }
     
     private func calculateBearingAndDistance() {
@@ -46,6 +49,35 @@ class LocationManager: NSObject, ObservableObject {
         
         // Calculate bearing
         bearingToDestination = calculateBearing(from: current.coordinates, to: dest.coordinates)
+        
+        // Update haptic feedback based on alignment
+        updateHapticFeedback()
+    }
+    
+    private func updateHapticFeedback() {
+        guard let current = currentLocation, destination != nil else { return }
+        
+        // Calculate how many degrees off target we are
+        let currentHeading = current.heading
+        let degreesOffTarget = calculateAlignmentError(currentHeading: currentHeading, targetBearing: bearingToDestination)
+        
+        // Update haptic service with alignment info
+        hapticService.updateAlignmentFeedback(degreesOffTarget: degreesOffTarget)
+    }
+    
+    private func calculateAlignmentError(currentHeading: Double, targetBearing: Double) -> Double {
+        // Calculate the shortest angular distance between current heading and target bearing
+        var difference = targetBearing - currentHeading
+        
+        // Normalize to -180 to +180 range
+        while difference > 180 {
+            difference -= 360
+        }
+        while difference < -180 {
+            difference += 360
+        }
+        
+        return abs(difference)
     }
     
     private func calculateBearing(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double {
