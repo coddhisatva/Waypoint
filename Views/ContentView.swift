@@ -29,12 +29,17 @@ struct ContentView: View {
                         showingMapView.toggle()
                     }) {
                         Image(systemName: showingMapView ? "location.north.circle.fill" : "map.circle.fill")
-                            .font(.title)
+                            .font(.system(size: 32)) // Increased from .title
                             .foregroundColor(.white)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
+                            .background(
+                                Circle()
+                                    .fill(Color.black.opacity(0.6))
+                                    .frame(width: 60, height: 60) // Explicit larger background
+                            )
                     }
-                    .padding()
+                    .frame(width: 60, height: 60) // Larger touch target
+                    .padding(.leading, 20)
+                    .padding(.bottom, 40)
                     Spacer()
                 }
             }

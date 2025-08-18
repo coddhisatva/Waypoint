@@ -22,10 +22,13 @@ struct CompassView: View {
             
             // Compass
             ZStack {
-                CompassRing()
+                CompassRing(heading: locationManager.currentLocation?.heading ?? 0)
                 CompassNeedle(heading: locationManager.currentLocation?.heading ?? 0)
                 if locationManager.destination != nil {
-                    DestinationPin(bearing: locationManager.bearingToDestination)
+                    DestinationPin(
+                        bearing: locationManager.bearingToDestination,
+                        currentHeading: locationManager.currentLocation?.heading ?? 0
+                    )
                 }
             }
             .frame(width: 300, height: 300)

@@ -26,6 +26,12 @@ struct SearchBar: View {
                             placesService.searchPlaces(query: newValue)
                         }
                     }
+                    .onAppear {
+                        // Show selected destination in search bar when view appears
+                        if let destination = locationManager.destination {
+                            searchText = destination.displayName
+                        }
+                    }
                 
                 if !searchText.isEmpty {
                     Button("Cancel") {
@@ -81,7 +87,8 @@ struct SearchBar: View {
             if let destination = destination {
                 DispatchQueue.main.async {
                     locationManager.setDestination(destination)
-                    searchText = ""
+                    // Keep the selected place name in search bar instead of clearing
+                    searchText = destination.displayName
                     isSearching = false
                     placesService.searchResults = []
                 }
