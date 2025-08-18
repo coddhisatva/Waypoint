@@ -122,6 +122,7 @@ class LocationManager: NSObject, ObservableObject {
 }
 
 extension LocationManager: CLLocationManagerDelegate {
+    /// Called when GPS location updates
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
@@ -137,6 +138,7 @@ extension LocationManager: CLLocationManagerDelegate {
         calculateBearingAndDistance()
     }
     
+    /// Called when compass heading updates
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         guard let current = currentLocation else { return }
         
@@ -150,10 +152,12 @@ extension LocationManager: CLLocationManagerDelegate {
         calculateBearingAndDistance()
     }
     
+    /// Called when location services encounter an error
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager failed with error: \(error)")
     }
     
+    /// Called when location permission status changes
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:

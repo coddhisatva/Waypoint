@@ -152,6 +152,7 @@ class HapticService: ObservableObject {
     
     // MARK: - Haptic Feedback Generation
     
+    /// Provides single haptic pulse for approach zone
     private func provideApproachFeedback(intensity: Float) {
         guard let engine = hapticEngine else { return }
         
@@ -167,6 +168,7 @@ class HapticService: ObservableObject {
         playHapticEvent(event)
     }
     
+    /// Starts timer for continuous alignment feedback
     private func startAlignmentFeedback() {
         // Start continuous feedback timer for alignment buildup
         feedbackTimer = Timer.scheduledTimer(withTimeInterval: feedbackUpdateInterval, repeats: true) { [weak self] _ in
