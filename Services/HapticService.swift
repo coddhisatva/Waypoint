@@ -15,11 +15,13 @@ class HapticService: ObservableObject {
     
     // Alignment zones (degrees)
     private let deadZoneRange: Double = 15.0        // ±15° no feedback zone after successful click
-    private let alignmentZoneRange: Double = 5.0    // ±5° precision zone for buildup
+    private let alignmentZoneRange: Double = 5.0    // ±5° alignment zone for timing buildup
+    private let precisionZoneRange: Double = 2.0    // ±2° precision zone for final click
     private let approachZoneRange: Double = 15.0    // 6°-15° approach zone with variable feedback
     
     // Timing constants
-    private let requiredHoldTime: TimeInterval = 1.5  // Time to hold alignment for culmination click
+    private let requiredHoldTime: TimeInterval = 1.5  // Total time to hold for culmination click
+    private let precisionHoldTime: TimeInterval = 0.3  // Final time that must be in precision zone
     private let feedbackUpdateInterval: TimeInterval = 0.1  // How often to update during buildup
     
     // Intensity ranges
@@ -37,9 +39,11 @@ class HapticService: ObservableObject {
     
     private var hapticEngine: CHHapticEngine?
     private var alignmentStartTime: Date?
+    private var precisionStartTime: Date?
     private var isInDeadZone = false
     private var hasTriggeredCulmination = false
     private var feedbackTimer: Timer?
+    private var currentTimeProgress: Double = 0.0
     
     // MARK: - Initialization
     
@@ -79,10 +83,8 @@ class HapticService: ObservableObject {
         }
         
         // Determine which zone we're in
-        if absAlignment <= alignmentZoneRange {
-            handleAlignmentZone(degreesOffTarget: absAlignment)
-        } else if absAlignment <= approachZoneRange {
-            handleApproachZone(degreesOffTarget: absAlignment)
+        if absAlignment <= approachZoneRange {
+            handleFeedbackZone(degreesOffTarget: absAlignment)
         } else {
             handleOutOfRange()
         }
@@ -90,37 +92,26 @@ class HapticService: ObservableObject {
     
     // MARK: - Zone Handling
     
-    /// Handles haptic feedback in the precise alignment zone (0°-5°)
-    private func handleAlignmentZone(degreesOffTarget: Double) {
-        // Start timing if we just entered alignment zone
-        if alignmentStartTime == nil {
-            alignmentStartTime = Date()
-            startAlignmentFeedback()
+    /// Handles all feedback zones with unified distance + timing logic
+    private func handleFeedbackZone(degreesOffTarget: Double) {
+        // Calculate base intensity from distance (15° → 0°) - ALWAYS
+        let baseIntensity = calculateDistanceIntensity(degreesOffTarget: degreesOffTarget)
+        
+        if degreesOffTarget <= alignmentZoneRange { // 0°-5°
+            // Add alignment timing component
+            let timeMultiplier = calculateAlignmentTimeMultiplier(degreesOffTarget: degreesOffTarget)
+            let finalIntensity = baseIntensity * timeMultiplier
+            provideFeedback(intensity: finalIntensity)
+            
+            // Check for culmination
+            checkForCulmination(degreesOffTarget: degreesOffTarget)
+        } else { // 6°-15°
+            // Reset alignment timing
+            resetAlignmentTiming()
+            
+            // Just use base distance intensity
+            provideFeedback(intensity: baseIntensity)
         }
-        
-        let holdDuration = Date().timeIntervalSince(alignmentStartTime!)
-        
-        // Check if we've held long enough for culmination
-        if holdDuration >= requiredHoldTime && !hasTriggeredCulmination {
-            triggerCulminationClick()
-        } else {
-            // Provide buildup feedback based on accuracy and hold time
-            let buildupIntensity = calculateAlignmentBuildup(
-                degreesOffTarget: degreesOffTarget,
-                holdDuration: holdDuration
-            )
-            provideBuildupFeedback(intensity: buildupIntensity)
-        }
-    }
-    
-    /// Handles haptic feedback in the approach zone (6°-15°)
-    private func handleApproachZone(degreesOffTarget: Double) {
-        // Reset alignment timing since we're not precisely aligned
-        resetAlignmentState()
-        
-        // Provide variable approach feedback
-        let approachIntensity = calculateApproachIntensity(degreesOffTarget: degreesOffTarget)
-        provideApproachFeedback(intensity: approachIntensity)
     }
     
     /// Handles when user is out of feedback range (>15°)
@@ -131,42 +122,96 @@ class HapticService: ObservableObject {
     
     // MARK: - Feedback Calculations
     
-    /// Calculates haptic intensity for approach zone
-    private func calculateApproachIntensity(degreesOffTarget: Double) -> Float {
-        // Linear interpolation: 15° = min intensity, 5° = max intensity
-        let normalizedDistance = (degreesOffTarget - alignmentZoneRange) / (approachZoneRange - alignmentZoneRange)
-        let clampedDistance = max(0.0, min(1.0, normalizedDistance))
-        
-        return minApproachIntensity + Float(1.0 - clampedDistance) * (maxApproachIntensity - minApproachIntensity)
+    /// Calculates base intensity from distance (consistent 15° → 0° curve)
+    private func calculateDistanceIntensity(degreesOffTarget: Double) -> Float {
+        // Linear from 15° (min) to 0° (max)
+        let normalizedDistance = min(1.0, degreesOffTarget / approachZoneRange)
+        return minApproachIntensity + Float(1.0 - normalizedDistance) * (maxApproachIntensity - minApproachIntensity)
     }
     
-    /// Calculates building haptic intensity during alignment hold
-    private func calculateAlignmentBuildup(degreesOffTarget: Double, holdDuration: TimeInterval) -> Float {
-        // Combine accuracy and hold time for buildup intensity
-        let accuracyFactor = Float(1.0 - (degreesOffTarget / alignmentZoneRange)) // Better accuracy = higher intensity
-        let timeFactor = Float(min(1.0, holdDuration / requiredHoldTime)) // Longer hold = higher intensity
+    /// Calculates timing multiplier for alignment zone (handles 80% cap + precision zone)
+    private func calculateAlignmentTimeMultiplier(degreesOffTarget: Double) -> Float {
+        // Start timing if we just entered alignment zone
+        if alignmentStartTime == nil {
+            alignmentStartTime = Date()
+            startAlignmentFeedback()
+        }
         
-        let baseIntensity = minAlignmentIntensity + (culminationIntensity - minAlignmentIntensity) * timeFactor
-        return baseIntensity * (0.7 + 0.3 * accuracyFactor) // Accuracy fine-tunes the base
+        let holdDuration = Date().timeIntervalSince(alignmentStartTime!)
+        let inPrecisionZone = degreesOffTarget <= precisionZoneRange
+        
+        // Calculate time progress with 80% cap logic
+        let baseHoldTime = requiredHoldTime - precisionHoldTime // 1.2 seconds
+        
+        if inPrecisionZone {
+            // In precision zone - can build beyond 80%
+            if precisionStartTime == nil {
+                precisionStartTime = Date()
+            }
+            let precisionDuration = Date().timeIntervalSince(precisionStartTime!)
+            let totalProgress = min(1.0, (baseHoldTime + precisionDuration) / requiredHoldTime)
+            currentTimeProgress = totalProgress
+        } else {
+            // Not in precision zone - cap at 80% (1.2s / 1.5s)
+            let cappedProgress = min(0.8, holdDuration / requiredHoldTime)
+            
+            // If coming from precision zone, gradually decrease to 80%
+            if currentTimeProgress > cappedProgress {
+                let decreaseRate = (currentTimeProgress - cappedProgress) * Double(feedbackUpdateInterval) / 0.1
+                currentTimeProgress = max(cappedProgress, currentTimeProgress - decreaseRate)
+            } else {
+                currentTimeProgress = cappedProgress
+            }
+            
+            precisionStartTime = nil
+        }
+        
+        // Convert progress to multiplier (1.0 = base, up to 2.0 = max buildup)
+        return Float(1.0 + currentTimeProgress)
+    }
+    
+    /// Checks if culmination click should happen
+    private func checkForCulmination(degreesOffTarget: Double) {
+        let inPrecisionZone = degreesOffTarget <= precisionZoneRange
+        
+        if inPrecisionZone && precisionStartTime != nil && !hasTriggeredCulmination {
+            let precisionDuration = Date().timeIntervalSince(precisionStartTime!)
+            if precisionDuration >= precisionHoldTime {
+                triggerCulminationClick()
+            }
+        }
+    }
+    
+    /// Resets alignment timing but preserves some state
+    private func resetAlignmentTiming() {
+        alignmentStartTime = nil
+        precisionStartTime = nil
+        currentTimeProgress = 0.0
+        hasTriggeredCulmination = false
+        stopAllFeedback()
     }
     
     // MARK: - Haptic Feedback Generation
     
-    /// Provides single haptic pulse for approach zone
-    private func provideApproachFeedback(intensity: Float) {
+    /// Provides unified haptic feedback for all zones
+    private func provideFeedback(intensity: Float) {
         guard let engine = hapticEngine else { return }
+        
+        let clampedIntensity = min(culminationIntensity, max(minApproachIntensity, intensity))
         
         let event = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [
-                CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
-                CHHapticEventParameter(parameterID: .hapticSharpness, value: approachSharpness)
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: clampedIntensity),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: alignmentSharpness)
             ],
             relativeTime: 0
         )
         
         playHapticEvent(event)
     }
+    
+
     
     /// Starts timer for continuous alignment feedback
     private func startAlignmentFeedback() {
@@ -183,8 +228,20 @@ class HapticService: ObservableObject {
         }
     }
     
+    /// Provides buildup feedback during alignment zone
     private func provideBuildupFeedback(intensity: Float) {
-        // This is called during the buildup phase - could enhance with specific patterns
+        guard let engine = hapticEngine else { return }
+        
+        let event = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: alignmentSharpness)
+            ],
+            relativeTime: 0
+        )
+        
+        playHapticEvent(event)
     }
     
     private func provideContinuousFeedback(intensity: Float) {
@@ -238,6 +295,9 @@ class HapticService: ObservableObject {
     
     private func resetAlignmentState() {
         alignmentStartTime = nil
+        precisionStartTime = nil
+        currentTimeProgress = 0.0
+        hasTriggeredCulmination = false
         stopAllFeedback()
     }
     
