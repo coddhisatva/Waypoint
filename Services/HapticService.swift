@@ -14,7 +14,6 @@ class HapticService: ObservableObject {
     // MARK: - Configurable Constants (edit these for testing)
     
     // Alignment zones (degrees)
-    private let deadZoneRange: Double = 15.0        // ±15° no feedback zone after successful click
     private let alignmentZoneRange: Double = 5.0    // ±5° alignment zone for timing buildup
     private let precisionZoneRange: Double = 2.0    // ±2° precision zone for final click
     private let approachZoneRange: Double = 15.0    // 6°-15° approach zone with variable feedback
@@ -73,13 +72,13 @@ class HapticService: ObservableObject {
         let absAlignment = abs(degreesOffTarget)
         
         // Check if we're in dead zone (already clicked and staying aligned)
-        if isInDeadZone && absAlignment <= deadZoneRange {
-            return // No feedback while in dead zone
-        }
-        
-        // Exit dead zone if we've moved too far
-        if isInDeadZone && absAlignment > deadZoneRange {
-            exitDeadZone()
+        if (isInDeadZone) {
+            // Exit dead zone if we've moved out
+            if (absAlignment > approachZoneRange) {
+                exitDeadZone()
+            } else {    // no feedback in dead zone
+                return;
+            }
         }
         
         // Determine which zone we're in
