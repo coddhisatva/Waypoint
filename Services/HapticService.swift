@@ -94,12 +94,18 @@ class HapticService: ObservableObject {
     /// Handles all feedback zones with unified distance + timing logic
     private func handleFeedbackZone(degreesOffTarget: Double) {
         // Calculate base intensity from distance (15° → 0°) - ALWAYS
-        let baseIntensity = calculateDistanceIntensity(degreesOffTarget: degreesOffTarget)
+        let distanceIntensity = calculateDistanceIntensity(degreesOffTarget: degreesOffTarget)
         
         if degreesOffTarget <= alignmentZoneRange { // 0°-5°
+            // Start timing if we just entered alignment zone
+            if alignmentStartTime == nil {
+                alignmentStartTime = Date()
+                startAlignmentFeedback()
+            }
+            
             // Add alignment timing component
-            let timeMultiplier = calculateAlignmentTimeMultiplier(degreesOffTarget: degreesOffTarget)
-            let finalIntensity = baseIntensity * timeMultiplier
+            let alignmentTimeMultiplier = calculateAlignmentTimeMultiplier(degreesOffTarget: degreesOffTarget)
+            let finalIntensity = distanceIntensity * alignmentTimeMultiplier
             provideFeedback(intensity: finalIntensity)
             
             // Check for culmination
@@ -109,7 +115,7 @@ class HapticService: ObservableObject {
             resetAlignmentTiming()
             
             // Just use base distance intensity
-            provideFeedback(intensity: baseIntensity)
+            provideFeedback(intensity: distanceIntensity)
         }
     }
     
@@ -130,12 +136,6 @@ class HapticService: ObservableObject {
     
     /// Calculates timing multiplier for alignment zone (handles 80% cap + precision zone)
     private func calculateAlignmentTimeMultiplier(degreesOffTarget: Double) -> Float {
-        // Start timing if we just entered alignment zone
-        if alignmentStartTime == nil {
-            alignmentStartTime = Date()
-            startAlignmentFeedback()
-        }
-        
         let holdDuration = Date().timeIntervalSince(alignmentStartTime!)
         let inPrecisionZone = degreesOffTarget <= precisionZoneRange
         
@@ -221,7 +221,8 @@ class HapticService: ObservableObject {
             
             let holdDuration = Date().timeIntervalSince(startTime)
             if holdDuration < self.requiredHoldTime {
-                let intensity = Float(minAlignmentIntensity + (culminationIntensity - minAlignmentIntensity) * (holdDuration / self.requiredHoldTime)) 
+                let intensityDiff = culminationIntensity - minAlignmentIntensity
+                let intensity = minAlignmentIntensity + intensityDiff * Float((holdDuration / self.requiredHoldTime))
                 self.provideContinuousFeedback(intensity: intensity)
             }
         }
