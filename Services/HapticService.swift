@@ -221,7 +221,7 @@ class HapticService: ObservableObject {
             
             let holdDuration = Date().timeIntervalSince(startTime)
             if holdDuration < self.requiredHoldTime {
-                let intensity = Float(0.3 + 0.3 * (holdDuration / self.requiredHoldTime))
+                let intensity = Float(minAlignmentIntensity + (culminationIntensity - minAlignmentIntensity) * (holdDuration / self.requiredHoldTime)) 
                 self.provideContinuousFeedback(intensity: intensity)
             }
         }
