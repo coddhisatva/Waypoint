@@ -149,18 +149,12 @@ class HapticService: ObservableObject {
             }
             let precisionDuration = Date().timeIntervalSince(precisionStartTime!)
             let totalProgress = min(1.0, (baseHoldTime + precisionDuration) / requiredHoldTime)
-            currentTimeProgress = totalProgress
+            currentTimeProgress = totalProgress     //**currentTimeProgress should be set to 0 when we exitAlignmentZone
         } else {
             // Not in precision zone - cap at 80% (1.2s / 1.5s)
             let cappedProgress = min(0.8, holdDuration / requiredHoldTime)
             
-            // If coming from precision zone, gradually decrease to 80%
-            if currentTimeProgress > cappedProgress {
-                let decreaseRate = (currentTimeProgress - cappedProgress) * Double(feedbackUpdateInterval) / 0.1
-                currentTimeProgress = max(cappedProgress, currentTimeProgress - decreaseRate)
-            } else {
-                currentTimeProgress = cappedProgress
-            }
+            currentTimeProgress = cappedProgress
             
             precisionStartTime = nil
         }
