@@ -22,6 +22,7 @@ class HapticService: ObservableObject {
     
     // MARK: - State
     
+    @Published var isEnabled: Bool = true
     private var hapticEngine: CHHapticEngine?
     private var feedbackTimer: Timer?
     private var isInZone = false
@@ -51,6 +52,8 @@ class HapticService: ObservableObject {
     
     /// Updates haptic feedback based on compass alignment
     func updateAlignmentFeedback(degreesOffTarget: Double) {
+        guard isEnabled else { return } // Don't provide feedback if haptics are disabled
+        
         let absAlignment = abs(degreesOffTarget)
         
         // Check if we're in the haptic zone

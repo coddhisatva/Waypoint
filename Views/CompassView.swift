@@ -10,6 +10,7 @@ import CoreLocation
 
 struct CompassView: View {
     @ObservedObject var locationManager: LocationManager
+    let devTestingMode: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -88,8 +89,8 @@ struct CompassView: View {
                 Text("\(Int(current.elevation)) ft Elevation")
                     .font(.system(size: 16, weight: .light))
                 
-                // Waypoint alignment testing (only show if destination exists)
-                if locationManager.destination != nil {
+                // Waypoint alignment testing (only show if destination exists and dev testing mode is enabled)
+                if locationManager.destination != nil && devTestingMode {
                     Text(waypointAlignmentText)
                         .font(.system(size: 16, weight: .light))
                         .foregroundColor(.yellow) // Different color for testing visibility

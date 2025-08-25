@@ -12,7 +12,7 @@ import Combine
 class LocationManager: NSObject, ObservableObject {
     private let locationManager = CLLocationManager()
     private let geocoder = CLGeocoder()
-    private let hapticService = HapticService()
+    private let hapticService: HapticService
     
     // MARK: - State
     
@@ -23,7 +23,8 @@ class LocationManager: NSObject, ObservableObject {
     @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
     private var lastGeocodeTime: Date = Date.distantPast  // Track last geocoding time
     
-    override init() {
+    init(hapticService: HapticService) {
+        self.hapticService = hapticService
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
