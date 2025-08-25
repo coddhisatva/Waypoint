@@ -134,6 +134,12 @@ class HapticService: ObservableObject {
     
     // MARK: - Cleanup
     
+    /// Resets all haptic state for new destination
+    func resetAllState() {
+        stopContinuousFeedback()
+        isInZone = false
+    }
+    
     deinit {
         stopContinuousFeedback()
     }
