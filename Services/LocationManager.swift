@@ -14,11 +14,14 @@ class LocationManager: NSObject, ObservableObject {
     private let geocoder = CLGeocoder()
     private let hapticService = HapticService()
     
+    // MARK: - State
+    
     @Published var currentLocation: CurrentLocation?
     @Published var destination: Destination?
     @Published var bearingToDestination: Double = 0
     @Published var distanceToDestination: Double = 0
     @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
+    private var lastGeocodeTime: Date = Date.distantPast  // Track last geocoding time
     
     override init() {
         super.init()
@@ -134,7 +137,14 @@ extension LocationManager: CLLocationManagerDelegate {
         )
         
         currentLocation = newLocation
-        reverseGeocode(location: location)
+        
+        // Only geocode every 15 seconds to avoid rate limiting
+        let timeSinceLastGeocode = Date().timeIntervalSince(lastGeocodeTime)
+        if timeSinceLastGeocode >= 15.0 {
+            reverseGeocode(location: location)
+            lastGeocodeTime = Date()
+        }
+        
         calculateBearingAndDistance()
     }
     
