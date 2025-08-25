@@ -13,12 +13,12 @@ class HapticService: ObservableObject {
     
     // MARK: - Constants
     
-    private let zoneRange: Double = 15.0        // ±15° zone
-    private let minIntensity: Float = 0.2       // Intensity at 15° boundary
-    private let maxIntensity: Float = 0.8       // Intensity at center (0°)
+    private let zoneRange: Double = 20.0        // ±15° zone
+    private let minIntensity: Float = 0.1       // Intensity at 15° boundary
+    private let maxIntensity: Float = 1.0       // Intensity at center (0°)
     private let feedbackInterval: TimeInterval = 0.1  // Feedback every 0.1 seconds
-    private let minSharpness: Float = 0.1    // Haptic feedback sharpness
-    private let maxSharpness: Float = 1.0
+    private let minSharpness: Float = 0.8  // Haptic feedback sharpness
+    private let maxSharpness: Float = 0.0
     
     // MARK: - State
     
@@ -63,6 +63,7 @@ class HapticService: ObservableObject {
             
             // Calculate intensity based on distance from center
             let normalizedDistance = Float(absAlignment / zoneRange)  // 0.0 to 1.0
+            let sharpDistance = min(1.0, normalizedDistance * 2.0) // sharpness final range of half the zone
             let intensityDiff = maxIntensity - minIntensity
             let sharpnessDiff = maxSharpness - minSharpness
             let intensity = maxIntensity - Float(normalizedDistance) * intensityDiff
