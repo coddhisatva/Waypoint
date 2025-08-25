@@ -14,10 +14,11 @@ class HapticService: ObservableObject {
     // MARK: - Constants
     
     private let zoneRange: Double = 15.0        // ±15° zone
-    private let minIntensity: Float = 0.4       // Intensity at 15° boundary
+    private let minIntensity: Float = 0.2       // Intensity at 15° boundary
     private let maxIntensity: Float = 0.8       // Intensity at center (0°)
     private let feedbackInterval: TimeInterval = 0.1  // Feedback every 0.1 seconds
-    private let hapticSharpness: Float = 0.3    // Haptic feedback sharpness
+    private let minSharpness: Float = 0.1    // Haptic feedback sharpness
+    private let maxSharpness: Float = 1.0
     
     // MARK: - State
     
@@ -57,15 +58,18 @@ class HapticService: ObservableObject {
             if !isInZone {
                 // Just entered zone - start continuous feedback
                 isInZone = true
-                startContinuousFeedback()
+                //startContinuousFeedback()   //enhance this if we want continuous, which we don't rn
             }
             
             // Calculate intensity based on distance from center
-            let normalizedDistance = absAlignment / zoneRange  // 0.0 to 1.0
-            let intensity = maxIntensity - Float(normalizedDistance) * (maxIntensity - minIntensity)
+            let normalizedDistance = Float(absAlignment / zoneRange)  // 0.0 to 1.0
+            let intensityDiff = maxIntensity - minIntensity
+            let sharpnessDiff = maxSharpness - minSharpness
+            let intensity = maxIntensity - Float(normalizedDistance) * intensityDiff
+            let sharpness = maxSharpness - Float(normalizedDistance) * sharpnessDiff
             
             // Provide immediate feedback
-            provideFeedback(intensity: intensity)
+            provideFeedback(intensity: intensity, sharpness: sharpness)
             
             // Debug output
             if degreesOffTarget > 0 {
@@ -106,14 +110,14 @@ class HapticService: ObservableObject {
     // MARK: - Haptic Feedback
     
     /// Provides haptic feedback at specified intensity
-    private func provideFeedback(intensity: Float) {
+    private func provideFeedback(intensity: Float, sharpness: Float) {
         guard let engine = hapticEngine else { return }
         
         let event = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [
                 CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
-                CHHapticEventParameter(parameterID: .hapticSharpness, value: hapticSharpness)
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
             ],
             relativeTime: 0
         )
