@@ -24,15 +24,15 @@ class HapticService: ObservableObject {
     private let feedbackUpdateInterval: TimeInterval = 0.1  // How often to update during buildup
     
     // Intensity ranges
-    private let minApproachIntensity: Float = 0.1    // Weakest feedback when far from target
-    private let maxApproachIntensity: Float = 0.3    // Strongest approach feedback at 5° boundary
-    private let minAlignmentIntensity: Float = 0.3   // Starting intensity when entering alignment zone
-    private let culminationIntensity: Float = 0.6    // Final satisfying click intensity
+    private let minApproachIntensity: Float = 0.4    // Weakest feedback when far from target
+    private let maxApproachIntensity: Float = 0.7    // Strongest approach feedback at 5° boundary
+    private let minAlignmentIntensity: Float = 0.7   // Starting intensity when entering alignment zone
+    private let culminationIntensity: Float = 0.10    // Final satisfying click intensity
     
     // Haptic characteristics
     private let approachSharpness: Float = 0.2       // Soft, gentle approach feedback
-    private let alignmentSharpness: Float = 0.3      // Slightly crisper during buildup
-    private let culminationSharpness: Float = 0.4    // Satisfying click sharpness
+    private let alignmentSharpness: Float = 0.6      // Slightly crisper during buildup
+    private let culminationSharpness: Float = 1    // Satisfying click sharpness
     
     // MARK: - State Management
     
@@ -122,7 +122,7 @@ class HapticService: ObservableObject {
     /// Handles when user is out of feedback range (>15°)
     private func handleOutOfRange() {
         resetAlignmentState()
-        stopAllFeedback()
+        stopAlignmentTimer()
     }
     
     // MARK: - Feedback Calculations
@@ -177,7 +177,7 @@ class HapticService: ObservableObject {
         precisionStartTime = nil
         currentTimeProgress = 0.0
         hasTriggeredCulmination = false
-        stopAllFeedback()
+        stopAlignmentTimer() //** probably not
     }
     
     // MARK: - Haptic Feedback Generation
@@ -186,12 +186,12 @@ class HapticService: ObservableObject {
     private func provideFeedback(intensity: Float) {
         guard let engine = hapticEngine else { return }
         
-        let clampedIntensity = min(culminationIntensity, max(minApproachIntensity, intensity))
+        let intensity = min(culminationIntensity, max(minApproachIntensity, intensity))
         
         let event = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [
-                CHHapticEventParameter(parameterID: .hapticIntensity, value: clampedIntensity),
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
                 CHHapticEventParameter(parameterID: .hapticSharpness, value: alignmentSharpness)
             ],
             relativeTime: 0
@@ -255,7 +255,7 @@ class HapticService: ObservableObject {
         guard let engine = hapticEngine else { return }
         
         hasTriggeredCulmination = true
-        stopAllFeedback()
+        stopAlignmentTimer()  //** probably not man
         
         // Create satisfying culmination click
         let event = CHHapticEvent(
@@ -288,7 +288,7 @@ class HapticService: ObservableObject {
         precisionStartTime = nil
         currentTimeProgress = 0.0
         hasTriggeredCulmination = false
-        stopAllFeedback()
+        stopAlignmentTimer()
     }
     
     private func enterDeadZone() {
@@ -301,7 +301,7 @@ class HapticService: ObservableObject {
         hasTriggeredCulmination = false
     }
     
-    private func stopAllFeedback() {
+    private func stopAlignmentTimer() {
         feedbackTimer?.invalidate()
         feedbackTimer = nil
     }
@@ -315,6 +315,6 @@ class HapticService: ObservableObject {
     }
     
     deinit {
-        stopAllFeedback()
+        stopAlignmentTimer()
     }
 }
