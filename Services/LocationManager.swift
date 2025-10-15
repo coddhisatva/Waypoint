@@ -20,6 +20,7 @@ class LocationManager: NSObject, ObservableObject {
     @Published var destination: Destination?
     @Published var searchText: String = ""
     @Published var isSearchBarFocused: Bool = false
+    @Published var recentDestinations: [Destination] = []
     @Published var bearingToDestination: Double = 0
     @Published var distanceToDestination: Double = 0
     @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
@@ -41,9 +42,24 @@ class LocationManager: NSObject, ObservableObject {
     /// Sets navigation destination and resets haptic state
     func setDestination(_ destination: Destination) {
         self.destination = destination
+        addToHistory(destination)
         calculateBearingAndDistance()
         // Reset haptic state when setting new destination
         hapticService.resetAllState()
+    }
+    
+    /// Adds a destination to recent history
+    private func addToHistory(_ destination: Destination) {
+        // Remove if already exists (to move to front)
+        recentDestinations.removeAll { $0.address == destination.address }
+        
+        // Add to front
+        recentDestinations.insert(destination, at: 0)
+        
+        // Keep only last 5
+        if recentDestinations.count > 5 {
+            recentDestinations = Array(recentDestinations.prefix(5))
+        }
     }
     
     

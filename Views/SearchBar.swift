@@ -103,9 +103,34 @@ struct SearchBar: View {
                         }
                     } else if !isSearching {
                         // Show history when focused but not searching (no text)
-                        Text("Recent searches will appear here")
-                            .foregroundColor(.secondary)
-                            .padding()
+                        if !locationManager.recentDestinations.isEmpty {
+                            ForEach(Array(locationManager.recentDestinations.enumerated()), id: \.element.address) { index, destination in
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(destination.displayName)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.primary)
+                                            
+                                            Text(destination.address)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 12)
+                                }
+                                .background(Color(.systemBackground))
+                                .onTapGesture {
+                                    selectHistoryDestination(destination)
+                                }
+                                
+                                if index < locationManager.recentDestinations.count - 1 {
+                                    Divider()
+                                }
+                            }
+                        }
                     }
                 }
                 .background(Color(.systemBackground))
@@ -128,5 +153,12 @@ struct SearchBar: View {
                 }
             }
         }
+    }
+    
+    private func selectHistoryDestination(_ destination: Destination) {
+        locationManager.setDestination(destination)
+        locationManager.searchText = destination.displayName
+        isSearching = false
+        placesService.searchResults = []
     }
 }
