@@ -19,6 +19,7 @@ class LocationManager: NSObject, ObservableObject {
     @Published var currentLocation: CurrentLocation?
     @Published var destination: Destination?
     @Published var searchText: String = ""
+    @Published var isSearchBarFocused: Bool = false
     @Published var bearingToDestination: Double = 0
     @Published var distanceToDestination: Double = 0
     @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
@@ -44,6 +45,7 @@ class LocationManager: NSObject, ObservableObject {
         // Reset haptic state when setting new destination
         hapticService.resetAllState()
     }
+    
     
     /// Calculates bearing and distance to destination
     private func calculateBearingAndDistance() {

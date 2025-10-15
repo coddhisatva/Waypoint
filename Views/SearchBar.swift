@@ -21,10 +21,26 @@ struct SearchBar: View {
                 TextField("Search for a place", text: $locationManager.searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .focused($isTextFieldFocused)
-                    .onChange(of: locationManager.searchText) { newValue in
+                    .onChange(of: locationManager.searchText) { _, newValue in
                         isSearching = !newValue.isEmpty
                         if !newValue.isEmpty {
                             placesService.searchPlaces(query: newValue)
+                        }
+                    }
+                    .onChange(of: isTextFieldFocused) { _, focused in
+                        // Only sync when TextField gains focus (false → true)
+                        print("📝 TextField focus changed: \(focused), manager focus: \(locationManager.isSearchBarFocused)")
+                        if focused == true && locationManager.isSearchBarFocused == false {
+                            print("📝 Syncing focus to manager...")
+                            locationManager.isSearchBarFocused = true
+                        }
+                    }
+                    .onChange(of: locationManager.isSearchBarFocused) { _, focused in
+                        // Only unfocus if we're currently focused and the manager says to unfocus
+                        print("🔄 Manager focus changed: \(focused), TextField focused: \(isTextFieldFocused)")
+                        if focused == false && isTextFieldFocused == true {
+                            print("🔄 Unfocusing TextField...")
+                            isTextFieldFocused = false
                         }
                     }
                     .onAppear {
@@ -89,12 +105,6 @@ struct SearchBar: View {
                 .shadow(radius: 4)
             }
             
-        }
-        .onTapGesture {
-            // Allow tapping outside to dismiss focus
-            if isTextFieldFocused {
-                isTextFieldFocused = false
-            }
         }
     }
     

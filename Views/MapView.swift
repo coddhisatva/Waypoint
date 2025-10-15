@@ -17,6 +17,18 @@ struct MapView: View {
             // Google Maps
             GoogleMapView(locationManager: locationManager)
             
+            // Transparent overlay to catch taps when search bar is focused
+            if locationManager.isSearchBarFocused {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        print("🗺️ Overlay tapped! isSearchBarFocused: \(locationManager.isSearchBarFocused)")
+                        print("🔍 Unfocusing search bar...")
+                        locationManager.isSearchBarFocused = false
+                        print("🔍 After unfocus: \(locationManager.isSearchBarFocused)")
+                    }
+            }
+            
             // Search bar overlay
             VStack {
                 SearchBar(placesService: placesService, locationManager: locationManager)
