@@ -34,12 +34,18 @@ struct SearchBar: View {
                     }
                 
                 if !searchText.isEmpty {
-                    Button("Cancel") {
+                    Button(action: {
                         searchText = ""
                         isSearching = false
                         placesService.searchResults = []
+                    }) {
+                        Text("✕")
+                            .font(.system(size: 16, weight: .heavy))
+                            .foregroundColor(.white)
+                            .frame(width: 26, height: 26)
+                            .background(Color.gray)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
-                    .foregroundColor(.blue)
                 }
             }
             
