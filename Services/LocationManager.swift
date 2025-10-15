@@ -20,7 +20,12 @@ class LocationManager: NSObject, ObservableObject {
     @Published var destination: Destination?
     @Published var searchText: String = ""
     @Published var isSearchBarFocused: Bool = false
-    @Published var recentDestinations: [Destination] = []
+    @Published var recentDestinations: [Destination] = [] {
+        didSet {
+            // Save to UserDefaults whenever it changes
+            saveRecentDestinations()
+        }
+    }
     @Published var bearingToDestination: Double = 0
     @Published var distanceToDestination: Double = 0
     @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
@@ -31,6 +36,9 @@ class LocationManager: NSObject, ObservableObject {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
+        
+        // Load saved destinations on startup
+        loadRecentDestinations()
     }
     
     /// Starts GPS and compass updates
@@ -59,6 +67,21 @@ class LocationManager: NSObject, ObservableObject {
         // Keep only last 5
         if recentDestinations.count > 5 {
             recentDestinations = Array(recentDestinations.prefix(5))
+        }
+    }
+    
+    /// Saves recent destinations to UserDefaults
+    private func saveRecentDestinations() {
+        if let encoded = try? JSONEncoder().encode(recentDestinations) {
+            UserDefaults.standard.set(encoded, forKey: "recentDestinations")
+        }
+    }
+    
+    /// Loads recent destinations from UserDefaults
+    private func loadRecentDestinations() {
+        if let data = UserDefaults.standard.data(forKey: "recentDestinations"),
+           let decoded = try? JSONDecoder().decode([Destination].self, from: data) {
+            recentDestinations = decoded
         }
     }
     
