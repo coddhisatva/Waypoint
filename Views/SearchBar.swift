@@ -69,35 +69,43 @@ struct SearchBar: View {
             }
             
             // Results list
-            if isSearching && !placesService.searchResults.isEmpty {
+            if isTextFieldFocused {
                 VStack(spacing: 0) {
-                    ForEach(placesService.searchResults.prefix(5), id: \.placeID) { prediction in
-                        VStack(alignment: .leading) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(prediction.attributedPrimaryText.string)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.primary)
-                                    
-                                    if let secondaryText = prediction.attributedSecondaryText?.string {
-                                        Text(secondaryText)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                    if isSearching && !placesService.searchResults.isEmpty {
+                        // Show search results when typing
+                        ForEach(placesService.searchResults.prefix(5), id: \.placeID) { prediction in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(prediction.attributedPrimaryText.string)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+                                        
+                                        if let secondaryText = prediction.attributedSecondaryText?.string {
+                                            Text(secondaryText)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
+                                    Spacer()
                                 }
-                                Spacer()
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
                             }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
+                            .background(Color(.systemBackground))
+                            .onTapGesture {
+                                selectPlace(prediction)
+                            }
+                            
+                            if prediction.placeID != placesService.searchResults.prefix(5).last?.placeID {
+                                Divider()
+                            }
                         }
-                        .background(Color(.systemBackground))
-                        .onTapGesture {
-                            selectPlace(prediction)
-                        }
-                        
-                        if prediction.placeID != placesService.searchResults.prefix(5).last?.placeID {
-                            Divider()
-                        }
+                    } else if !isSearching {
+                        // Show history when focused but not searching (no text)
+                        Text("Recent searches will appear here")
+                            .foregroundColor(.secondary)
+                            .padding()
                     }
                 }
                 .background(Color(.systemBackground))
