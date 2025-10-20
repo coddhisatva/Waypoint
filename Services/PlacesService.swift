@@ -16,7 +16,6 @@ class PlacesService: ObservableObject {
     
     func searchPlaces(query: String) {
         let filter = GMSAutocompleteFilter()
-        filter.type = .geocode
         
         placesClient.findAutocompletePredictions(fromQuery: query, filter: filter, sessionToken: nil) { [weak self] results, error in
             DispatchQueue.main.async {
