@@ -54,7 +54,7 @@ struct CompassView: View {
                     .font(.caption)
                     .opacity(0.8)
                 
-                Text(String(format: "%.1f miles", locationManager.distanceToDestination))
+                Text(formatDistance(locationManager.distanceToDestination))
                     .font(.caption)
                     .opacity(0.8)
             } else {
@@ -95,6 +95,19 @@ struct CompassView: View {
                         .foregroundColor(.yellow) // Different color for testing visibility
                 }
             }
+        }
+    }
+    
+    private func formatDistance(_ miles: Double) -> String {
+        // Convert miles to meters for the threshold check
+        let meters = miles * 1609.34
+        
+        if meters < 322 { // 0.2 miles = 322 meters
+            // Show meters when under 0.2 miles
+            return String(format: "%.0f m", meters)
+        } else {
+            // Show miles when 0.2 miles or more
+            return String(format: "%.1f miles", miles)
         }
     }
     
