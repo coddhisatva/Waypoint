@@ -53,8 +53,6 @@ struct GoogleMapView: UIViewRepresentable {
     }
     
     func updateUIView(_ mapView: GMSMapView, context: Context) {
-        mapView.clear()
-        
         // Current location marker
         if let current = locationManager.currentLocation {
             let marker = GMSMarker()
