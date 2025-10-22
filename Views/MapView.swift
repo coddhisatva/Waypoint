@@ -41,8 +41,14 @@ struct MapView: View {
 
 struct GoogleMapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
+    @State private var mapView: GMSMapView?
     
     func makeUIView(context: Context) -> GMSMapView {
+        // Only create map once, don't reset camera on subsequent calls
+        if let existingMapView = mapView {
+            return existingMapView
+        }
+        
         let camera = GMSCameraPosition.camera(
             withLatitude: locationManager.currentLocation?.coordinates.latitude ?? 40.7829,
             longitude: locationManager.currentLocation?.coordinates.longitude ?? -73.9654,
