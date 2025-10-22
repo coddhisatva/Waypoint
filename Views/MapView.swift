@@ -62,14 +62,6 @@ struct GoogleMapView: UIViewRepresentable {
             marker.title = "Current Location"
             marker.icon = GMSMarker.markerImage(with: .blue)
             marker.map = mapView
-            
-            // Update camera to current location
-            let camera = GMSCameraPosition.camera(
-                withLatitude: current.coordinates.latitude,
-                longitude: current.coordinates.longitude,
-                zoom: mapView.camera.zoom
-            )
-            mapView.animate(to: camera)
         }
         
         // Destination marker
