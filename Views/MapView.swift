@@ -55,6 +55,7 @@ struct GoogleMapView: UIViewRepresentable {
             zoom: 15.0
         )
         let mapView = GMSMapView.map(withFrame: CGRect.zero, camera: camera)
+        self.mapView = mapView
         return mapView
     }
     

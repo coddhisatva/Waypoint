@@ -27,6 +27,10 @@ struct ContentView: View {
                 HStack {
                     Button(action: {
                         showingMapView.toggle()
+                        // Unfocus search bar when switching to map view
+                        if showingMapView {
+                            locationManager.isSearchBarFocused = false
+                        }
                     }) {
                         Image(systemName: showingMapView ? "safari.fill" : "map.circle.fill")
                             .font(.system(size: 32)) // Increased from .title
