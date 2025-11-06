@@ -29,13 +29,16 @@ struct MapView: View {
                     }
             }
             
-            // Search bar overlay
-            VStack {
+            // Search bar overlay - fixed position at top
+            VStack(spacing: 0) {
                 SearchBar(placesService: placesService, locationManager: locationManager)
                     .padding()
+                    .frame(maxWidth: .infinity, alignment: .top)
                 Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+        .ignoresSafeArea(.keyboard)
     }
 }
 
