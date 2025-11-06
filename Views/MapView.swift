@@ -42,6 +42,7 @@ struct MapView: View {
 struct GoogleMapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
     @State private var mapView: GMSMapView?
+    @State private var hasSetInitialCamera = false
     
     func makeUIView(context: Context) -> GMSMapView {
         // Only create map once, don't reset camera on subsequent calls
@@ -56,10 +57,27 @@ struct GoogleMapView: UIViewRepresentable {
         )
         let mapView = GMSMapView.map(withFrame: CGRect.zero, camera: camera)
         self.mapView = mapView
+        
+        // If we already have a location, mark camera as set
+        if locationManager.currentLocation != nil {
+            hasSetInitialCamera = true
+        }
+        
         return mapView
     }
     
     func updateUIView(_ mapView: GMSMapView, context: Context) {
+        // Update camera to current location when it first becomes available
+        if let current = locationManager.currentLocation, !hasSetInitialCamera {
+            let camera = GMSCameraPosition.camera(
+                withLatitude: current.coordinates.latitude,
+                longitude: current.coordinates.longitude,
+                zoom: 15.0
+            )
+            mapView.camera = camera
+            hasSetInitialCamera = true
+        }
+        
         // Current location marker
         if let current = locationManager.currentLocation {
             let marker = GMSMarker()
