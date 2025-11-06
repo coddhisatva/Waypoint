@@ -29,16 +29,13 @@ struct MapView: View {
                     }
             }
             
-            // Search bar overlay - fixed position at top
-            VStack(spacing: 0) {
+            // Search bar overlay
+            VStack {
                 SearchBar(placesService: placesService, locationManager: locationManager)
                     .padding()
-                    .frame(maxWidth: .infinity, alignment: .top)
                 Spacer()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .ignoresSafeArea(.keyboard)
     }
 }
 
@@ -48,30 +45,39 @@ struct GoogleMapView: UIViewRepresentable {
     @State private var hasSetInitialCamera = false
     
     func makeUIView(context: Context) -> GMSMapView {
-        // Only create map once, don't reset camera on subsequent calls
-        if let existingMapView = mapView {
-            return existingMapView
+        // Restore saved camera position if available, otherwise use current location or default
+        let camera: GMSCameraPosition
+        if let savedCamera = locationManager.getSavedMapCamera() {
+            camera = savedCamera
+            hasSetInitialCamera = true
+        } else if let current = locationManager.currentLocation {
+            camera = GMSCameraPosition.camera(
+                withLatitude: current.coordinates.latitude,
+                longitude: current.coordinates.longitude,
+                zoom: 15.0
+            )
+            hasSetInitialCamera = true
+        } else {
+            camera = GMSCameraPosition.camera(
+                withLatitude: 40.7829,
+                longitude: -73.9654,
+                zoom: 15.0
+            )
         }
         
-        let camera = GMSCameraPosition.camera(
-            withLatitude: locationManager.currentLocation?.coordinates.latitude ?? 40.7829,
-            longitude: locationManager.currentLocation?.coordinates.longitude ?? -73.9654,
-            zoom: 15.0
-        )
         let mapView = GMSMapView.map(withFrame: CGRect.zero, camera: camera)
         self.mapView = mapView
         
-        // If we already have a location, mark camera as set
-        if locationManager.currentLocation != nil {
-            hasSetInitialCamera = true
-        }
+        // Set up camera change delegate to save position
+        mapView.delegate = context.coordinator
+        context.coordinator.setMapView(mapView)
         
         return mapView
     }
     
     func updateUIView(_ mapView: GMSMapView, context: Context) {
-        // Update camera to current location when it first becomes available
-        if let current = locationManager.currentLocation, !hasSetInitialCamera {
+        // Update camera to current location when it first becomes available (only if no saved camera)
+        if let current = locationManager.currentLocation, !hasSetInitialCamera, locationManager.getSavedMapCamera() == nil {
             let camera = GMSCameraPosition.camera(
                 withLatitude: current.coordinates.latitude,
                 longitude: current.coordinates.longitude,
@@ -97,6 +103,28 @@ struct GoogleMapView: UIViewRepresentable {
             marker.title = destination.displayName
             marker.snippet = destination.address
             marker.map = mapView
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(locationManager: locationManager)
+    }
+    
+    class Coordinator: NSObject, GMSMapViewDelegate {
+        var locationManager: LocationManager
+        weak var mapView: GMSMapView?
+        
+        init(locationManager: LocationManager) {
+            self.locationManager = locationManager
+        }
+        
+        func setMapView(_ mapView: GMSMapView) {
+            self.mapView = mapView
+        }
+        
+        func mapView(_ mapView: GMSMapView, didChange position: GMSCameraPosition) {
+            // Save camera position whenever it changes
+            locationManager.saveMapCamera(position)
         }
     }
 }

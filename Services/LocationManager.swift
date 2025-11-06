@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import Combine
+import GoogleMaps
 
 class LocationManager: NSObject, ObservableObject {
     private let locationManager = CLLocationManager()
@@ -30,6 +31,9 @@ class LocationManager: NSObject, ObservableObject {
     @Published var distanceToDestination: Double = 0
     @Published var alignmentError: Double = 0  // Signed difference: + = right of target, - = left of target
     private var lastGeocodeTime: Date = Date.distantPast  // Track last geocoding time
+    
+    // Map camera state (survives view recreation)
+    var savedMapCamera: GMSCameraPosition?
     
     override init() {
         super.init()
@@ -83,6 +87,16 @@ class LocationManager: NSObject, ObservableObject {
            let decoded = try? JSONDecoder().decode([Destination].self, from: data) {
             recentDestinations = decoded
         }
+    }
+    
+    /// Saves the current map camera position
+    func saveMapCamera(_ camera: GMSCameraPosition) {
+        savedMapCamera = camera
+    }
+    
+    /// Gets the saved map camera position, or nil if none exists
+    func getSavedMapCamera() -> GMSCameraPosition? {
+        return savedMapCamera
     }
     
     
