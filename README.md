@@ -48,6 +48,29 @@ Waypoint/
 └── Utils/           # Reusable utilities
 ```
 
+### File Structure
+
+```
+Waypoint/
+├── WaypointApp.swift          # App entry point, initializes Google Maps SDK
+├── Models/
+│   ├── CurrentLocation.swift
+│   └── Destination.swift
+├── Services/
+│   ├── LocationManager.swift
+│   ├── PlacesService.swift
+│   └── HapticService.swift
+├── Views/
+│   ├── ContentView.swift
+│   ├── CompassView.swift
+│   ├── MapView.swift
+│   └── SearchBar.swift
+├── Utils/
+│   └── CompassDrawing.swift
+├── Config.plist               # Google Maps API key (not in repo)
+└── Assets.xcassets/           # App icons and assets
+```
+
 #### Models
 
 Models are simple data structures that represent the core entities in the app. They contain no business logic—just properties and basic initialization.
@@ -143,33 +166,43 @@ Views are SwiftUI components that define the user interface. They observe data f
 - `LocationManager` is the single source of truth for location and destination state
 - Services publish updates that automatically trigger UI refreshes
 
-**Persistence**
-- Recent destinations stored in UserDefaults as JSON
-- Automatically saved when destinations change
-- Loaded on app startup
+**State Variables and Storage**
 
-### File Structure
+**LocationManager (Session State - `@Published`)**
+- `currentLocation`: Current GPS position, heading, address, and elevation
+- `destination`: Selected destination for navigation
+- `searchText`: Current search bar input text
+- `isSearchBarFocused`: Whether the search bar is currently focused
+- `recentDestinations`: Array of last 5 searched destinations
+- `bearingToDestination`: Calculated bearing angle to destination (0-360°)
+- `distanceToDestination`: Distance to destination in miles
+- `alignmentError`: Signed alignment error (+ = right of target, - = left)
 
-```
-Waypoint/
-├── WaypointApp.swift          # App entry point, initializes Google Maps SDK
-├── Models/
-│   ├── CurrentLocation.swift
-│   └── Destination.swift
-├── Services/
-│   ├── LocationManager.swift
-│   ├── PlacesService.swift
-│   └── HapticService.swift
-├── Views/
-│   ├── ContentView.swift
-│   ├── CompassView.swift
-│   ├── MapView.swift
-│   └── SearchBar.swift
-├── Utils/
-│   └── CompassDrawing.swift
-├── Config.plist               # Google Maps API key (not in repo)
-└── Assets.xcassets/           # App icons and assets
-```
+**LocationManager (Session State - Non-Published)**
+- `savedMapCamera`: Saved map camera position (lat, lng, zoom) for restoring map view state
+- Persists across view recreations when switching between compass and map views
+- Saved continuously as user pans/zooms the map via `GMSMapViewDelegate`
+
+**LocationManager (Persistent State - UserDefaults)**
+- `recentDestinations`: Saved to UserDefaults as JSON
+- Automatically saved via `didSet` when array changes
+- Loaded on app startup in `init()`
+- Key: `"recentDestinations"`
+
+**PlacesService (Session State)**
+- `searchResults`: Array of Google Places autocomplete predictions
+
+**View-Level State (`@State`)**
+- `ContentView.showingMapView`: Boolean flag for compass/map view toggle
+- `MapView.GoogleMapView.mapView`: Reference to the GMSMapView instance
+- `MapView.GoogleMapView.hasSetInitialCamera`: Flag to prevent overwriting saved camera
+- `SearchBar.isSearching`: Whether user is actively searching
+- `SearchBar.isTextFieldFocused`: TextField focus state
+
+**Persistence Strategy**
+- **Persistent (survives app restarts)**: Recent destinations → UserDefaults
+- **Session (survives view recreation)**: Map camera, navigation state → LocationManager properties
+- **Local (view lifecycle)**: UI state, temporary flags → `@State` in views
 
 ### Configuration
 
