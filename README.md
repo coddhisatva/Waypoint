@@ -6,6 +6,14 @@ Waypoint is an iOS navigation app that combines the simplicity of a compass inte
 
 To be released in iOS App Store in near future.
 
+<img src="WaypointCovers/IMG_1576.jpg" width="200" /> <img src="WaypointCovers/IMG_1577.jpg" width="200" /> <img src="WaypointCovers/IMG_1578.jpg" width="200" /> <img src="WaypointCovers/IMG_1579.jpg" width="200" /> <img src="WaypointCovers/IMG_1580.jpg" width="200" />
+
+To be released in iOS App Store in near future.
+
+## Demo Video
+
+[Watch Demo Video](https://www.youtube.com/shorts/ddlQDdIzPeY)
+
 ### Key Features
 
 - **Compass Navigation**: Real-time compass view with a waypoint pin showing the direction to your destination
