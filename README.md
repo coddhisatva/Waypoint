@@ -6,7 +6,7 @@ Waypoint is an iOS navigation app that combines the simplicity of a compass inte
 
 To be released in iOS App Store in near future.
 
-<img src="WaypointCovers/IMG_1576.jpg" width="200" height="400" /> <img src="WaypointCovers/IMG_1577.jpg" width="200" height="400" /> <img src="WaypointCovers/IMG_1578.jpg" width="200" height="400" /> <img src="WaypointCovers/IMG_1579.jpg" width="200" height="400" /> <img src="WaypointCovers/IMG_1580.jpg" width="200" height="400" />
+<img src="WaypointCovers/IMG_1576.jpg" width="140" /> <img src="WaypointCovers/IMG_1577.jpg" width="140" /> <img src="WaypointCovers/IMG_1578.jpg" width="140" /> <img src="WaypointCovers/IMG_1579.jpg" width="140" /> <img src="WaypointCovers/IMG_1580.jpg" width="140" />
 
 To be released in iOS App Store in near future.
 
