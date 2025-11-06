@@ -205,6 +205,3 @@ Potential areas for expansion:
 - Pulses on waypoint placement for enhanced immersion and synchronization between digital map, hapto-visual feedback, and real-world placement
 
 ---
-
-
-
