@@ -15,11 +15,15 @@ struct ContentView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             
-            if showingMapView {
-                MapView(locationManager: locationManager)
-            } else {
-                CompassView(locationManager: locationManager)
-            }
+
+            // Keep both views in memory, just hide/show them
+            MapView(locationManager: locationManager)
+                .opacity(showingMapView ? 1 : 0)
+                .allowsHitTesting(showingMapView)
+            
+            CompassView(locationManager: locationManager)
+                .opacity(showingMapView ? 0 : 1)
+                .allowsHitTesting(!showingMapView)
             
             // Toggle button (bottom left)
             VStack {
