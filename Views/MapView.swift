@@ -86,13 +86,29 @@ struct GoogleMapView: UIViewRepresentable {
             mapView.camera = camera
         }
         
-        // Current location marker
+        // Current location marker - update existing or create new
         if let current = locationManager.currentLocation {
-            let marker = GMSMarker()
-            marker.position = current.coordinates
-            marker.title = "Current Location"
-            marker.icon = GMSMarker.markerImage(with: .blue)
-            marker.map = mapView
+            // Only update if location actually changed
+            if context.coordinator.lastLocation != current {
+                // Location changed, update marker
+                if let marker = context.coordinator.currentLocationMarker {
+                    marker.position = current.coordinates
+                } else {
+                    // Create new marker
+                    let marker = GMSMarker()
+                    marker.position = current.coordinates
+                    marker.title = "Current Location"
+                    marker.icon = GMSMarker.markerImage(with: .blue)
+                    marker.map = mapView
+                    context.coordinator.currentLocationMarker = marker
+                }
+                context.coordinator.lastLocation = current
+            }
+        } else {
+            // Remove marker if no location
+            context.coordinator.currentLocationMarker?.map = nil
+            context.coordinator.currentLocationMarker = nil
+            context.coordinator.lastLocation = nil
         }
         
         // Destination marker
@@ -112,6 +128,8 @@ struct GoogleMapView: UIViewRepresentable {
     class Coordinator: NSObject, GMSMapViewDelegate {
         var locationManager: LocationManager
         weak var mapView: GMSMapView?
+        var currentLocationMarker: GMSMarker?
+        var lastLocation: CurrentLocation?
         
         init(locationManager: LocationManager) {
             self.locationManager = locationManager

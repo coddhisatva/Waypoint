@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 
-struct CurrentLocation {
+struct CurrentLocation: Equatable {
     let coordinates: CLLocationCoordinate2D
     let heading: Double // degrees from North (0-360)
     let address: String // "Sea Girt, NJ"
