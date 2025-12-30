@@ -20,4 +20,9 @@ struct CurrentLocation: Equatable {
         self.address = address
         self.elevation = elevation
     }
+    
+    static func == (lhs: CurrentLocation, rhs: CurrentLocation) -> Bool {
+        return lhs.coordinates.latitude == rhs.coordinates.latitude &&
+               lhs.coordinates.longitude == rhs.coordinates.longitude
+    }
 }
