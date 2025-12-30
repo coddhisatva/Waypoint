@@ -33,7 +33,7 @@ class LocationManager: NSObject, ObservableObject {
     private var lastGeocodeTime: Date = Date.distantPast  // Track last geocoding time
     
     // Map camera state (survives view recreation)
-    var savedMapCamera: GMSCameraPosition?
+    var mapCamera: GMSCameraPosition?
     
     override init() {
         super.init()
@@ -87,16 +87,6 @@ class LocationManager: NSObject, ObservableObject {
            let decoded = try? JSONDecoder().decode([Destination].self, from: data) {
             recentDestinations = decoded
         }
-    }
-    
-    /// Saves the current map camera position
-    func saveMapCamera(_ camera: GMSCameraPosition) {
-        savedMapCamera = camera
-    }
-    
-    /// Gets the saved map camera position, or nil if none exists
-    func getSavedMapCamera() -> GMSCameraPosition? {
-        return savedMapCamera
     }
     
     

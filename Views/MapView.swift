@@ -22,10 +22,10 @@ struct MapView: View {
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        print("🗺️ Overlay tapped! isSearchBarFocused: \(locationManager.isSearchBarFocused)")
-                        print("🔍 Unfocusing search bar...")
+                        //print("🗺️ Overlay tapped! isSearchBarFocused: \(locationManager.isSearchBarFocused)")
+                        //print("🔍 Unfocusing search bar...")
                         locationManager.isSearchBarFocused = false
-                        print("🔍 After unfocus: \(locationManager.isSearchBarFocused)")
+                        //print("🔍 After unfocus: \(locationManager.isSearchBarFocused)")
                     }
             }
             
@@ -42,31 +42,31 @@ struct MapView: View {
 struct GoogleMapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
     @State private var mapView: GMSMapView?
-    @State private var hasSetInitialCamera = false
+    
+    private let MAP_ZOOM: Float = 15.0
     
     func makeUIView(context: Context) -> GMSMapView {
         // Restore saved camera position if available, otherwise use current location or default
         let camera: GMSCameraPosition
-        if let savedCamera = locationManager.getSavedMapCamera() {
-            camera = savedCamera
-            hasSetInitialCamera = true
+        if let mapCamera = locationManager.mapCamera {
+            camera = mapCamera
         } else if let current = locationManager.currentLocation {
             camera = GMSCameraPosition.camera(
                 withLatitude: current.coordinates.latitude,
                 longitude: current.coordinates.longitude,
-                zoom: 15.0
+                zoom: MAP_ZOOM
             )
-            hasSetInitialCamera = true
         } else {
             camera = GMSCameraPosition.camera(
                 withLatitude: 40.7829,
                 longitude: -73.9654,
-                zoom: 15.0
+                zoom: MAP_ZOOM
             )
         }
         
         let mapView = GMSMapView.map(withFrame: CGRect.zero, camera: camera)
-        self.mapView = mapView
+        //ik i added this for some reason back then but seems to do nothing
+        //self.mapView = mapView
         
         // Set up camera change delegate to save position
         mapView.delegate = context.coordinator
@@ -77,14 +77,13 @@ struct GoogleMapView: UIViewRepresentable {
     
     func updateUIView(_ mapView: GMSMapView, context: Context) {
         // Update camera to current location when it first becomes available (only if no saved camera)
-        if let current = locationManager.currentLocation, !hasSetInitialCamera, locationManager.getSavedMapCamera() == nil {
+        if let current = locationManager.currentLocation, locationManager.mapCamera == nil {
             let camera = GMSCameraPosition.camera(
                 withLatitude: current.coordinates.latitude,
                 longitude: current.coordinates.longitude,
-                zoom: 15.0
+                zoom: MAP_ZOOM
             )
             mapView.camera = camera
-            hasSetInitialCamera = true
         }
         
         // Current location marker
@@ -124,7 +123,7 @@ struct GoogleMapView: UIViewRepresentable {
         
         func mapView(_ mapView: GMSMapView, didChange position: GMSCameraPosition) {
             // Save camera position whenever it changes
-            locationManager.saveMapCamera(position)
+            locationManager.mapCamera = position
         }
     }
 }
