@@ -111,13 +111,32 @@ struct GoogleMapView: UIViewRepresentable {
             context.coordinator.lastLocation = nil
         }
         
-        // Destination marker
+        // Destination marker - update existing or create new
         if let destination = locationManager.destination {
-            let marker = GMSMarker()
-            marker.position = destination.coordinates
-            marker.title = destination.displayName
-            marker.snippet = destination.address
-            marker.map = mapView
+            // Only update if destination actually changed
+            if context.coordinator.lastDestination?.coordinates.latitude != destination.coordinates.latitude ||
+               context.coordinator.lastDestination?.coordinates.longitude != destination.coordinates.longitude {
+                // Destination changed, update marker
+                if let marker = context.coordinator.destinationMarker {
+                    marker.position = destination.coordinates
+                    marker.title = destination.displayName
+                    marker.snippet = destination.address
+                } else {
+                    // Create new marker
+                    let marker = GMSMarker()
+                    marker.position = destination.coordinates
+                    marker.title = destination.displayName
+                    marker.snippet = destination.address
+                    marker.map = mapView
+                    context.coordinator.destinationMarker = marker
+                }
+                context.coordinator.lastDestination = destination
+            }
+        } else {
+            // Remove marker if no destination
+            context.coordinator.destinationMarker?.map = nil
+            context.coordinator.destinationMarker = nil
+            context.coordinator.lastDestination = nil
         }
     }
     
@@ -130,6 +149,8 @@ struct GoogleMapView: UIViewRepresentable {
         weak var mapView: GMSMapView?
         var currentLocationMarker: GMSMarker?
         var lastLocation: CurrentLocation?
+        var destinationMarker: GMSMarker?
+        var lastDestination: Destination?
         
         init(locationManager: LocationManager) {
             self.locationManager = locationManager
