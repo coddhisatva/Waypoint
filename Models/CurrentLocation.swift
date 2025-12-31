@@ -11,7 +11,7 @@ import CoreLocation
 struct CurrentLocation: Equatable {
     let coordinates: CLLocationCoordinate2D
     let heading: Double // degrees from North (0-360)
-    let address: String // "Sea Girt, NJ"
+    let address: String // "Newark, NJ"
     let elevation: Double // in feet
     
     init(coordinates: CLLocationCoordinate2D, heading: Double, address: String = "", elevation: Double = 0) {

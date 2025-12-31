@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 
-struct Destination: Codable {
+struct Destination: Codable, Equatable {
     let address: String // "Central Park, New York, NY"
     let displayName: String // "Central Park"
     let coordinates: CLLocationCoordinate2D
@@ -40,5 +40,10 @@ struct Destination: Codable {
         try container.encode(displayName, forKey: .displayName)
         try container.encode(coordinates.latitude, forKey: .latitude)
         try container.encode(coordinates.longitude, forKey: .longitude)
+    }
+    
+    static func == (lhs: Destination, rhs: Destination) -> Bool {
+        return lhs.coordinates.latitude == rhs.coordinates.latitude &&
+               lhs.coordinates.longitude == rhs.coordinates.longitude
     }
 }

@@ -114,8 +114,7 @@ struct GoogleMapView: UIViewRepresentable {
         // Destination marker - update existing or create new
         if let destination = locationManager.destination {
             // Only update if destination actually changed
-            if context.coordinator.lastDestination?.coordinates.latitude != destination.coordinates.latitude ||
-               context.coordinator.lastDestination?.coordinates.longitude != destination.coordinates.longitude {
+            if context.coordinator.lastDestination != destination {
                 // Destination changed, update marker
                 if let marker = context.coordinator.destinationMarker {
                     marker.position = destination.coordinates
